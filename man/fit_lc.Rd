@@ -4,7 +4,8 @@
 \alias{fit_lc}
 \title{Fit latent-class multinomial models}
 \usage{
-fit_lc(dataset, data, model, id = NULL, condition = NULL)
+fit_lc(dataset, data, model, id = NULL, condition = NULL,
+  core = NULL)
 }
 \arguments{
 \item{dataset}{Character.}

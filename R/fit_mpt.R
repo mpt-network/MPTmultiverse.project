@@ -143,6 +143,24 @@
 #'     mean of the identifiable individual-level estimates. And difference
 #'     between conditions is calculated in the same manner as for the asymptotic
 #'     case using the identifiable individual-level parameter esatimates.
+#'     
+#'   }
+#'   
+#'   \subsection{Latent-class approach}{
+#'     The \emph{latent-class approach} is fitted by interfacing \code{HMMTree},
+#'     a software package that is only available on Microsoft Windows Machines.
+#'     To install this software and the necessary \code{R} interface, use
+#'     \code{devtools::install_github("methexp/HMMTreeR")}.
+#'     It is currently not possible to estimate models that contain parameters
+#'     that are fixed to numerical values.
+#'     Multiple latent-class models with differing number of latent classes are
+#'     estimated. The model that obtains the lowest \emph{AIC} while still being
+#'     identified is selected for extracting parameter estimates
+#'     The returned group-level parameter estimates are calculated as the
+#'     weighted mean of parameter estimates of latent classes. Corresponding SEs
+#'     are given by the square root of the weighted mean of class-wise squared
+#'     SEs. Goodness-of-fit statistics are M1, M2, S1, and S2 as described by
+#'     Klauer(2006).
 #'   }
 #'
 #'   \subsection{Bayesian Methods}{
@@ -229,7 +247,11 @@
 #'   Smith, J. B., & Batchelder, W. H. (2008). Assessing individual differences
 #'   in categorical data. \emph{Psychonomic Bulletin & Review}, 15(4), 713-731.
 #'   \url{https://doi.org/10.3758/PBR.15.4.713}
-
+#'   
+#'   Klauer, K.C. (2006). Hierarchical multinomial processing tree models: A
+#'   latent-class approach. \emph{Psychometrika}, \emph{71} (1), 7-31.
+#'   \url{https://doi.org/10.1007/s11336-004-1188-3}
+#'   
 #' @importFrom MPTmultiverse fit_mpt
 #' @export
 
@@ -264,14 +286,15 @@ fit_mpt <- function(
     method <- available_methods
   }
 
-  results <- MPTmultiverse::fit_mpt(
+  results <- list()
+  results[["multiverse"]] <- MPTmultiverse::fit_mpt(
     model = model
     , dataset = dataset
     , data = data
     , id = id
     , condition = condition
     , core = core
-    , method = setdiff(method, "latent_class")
+    , method = union("asymptotic_complete", setdiff(method, "latent_class"))
   )
 
   # HMMTreeR part ----
@@ -285,23 +308,26 @@ fit_mpt <- function(
       # ensure that no fixed parameter values are present
       test <- 1
       test <- tryCatch(simplify_eqn(
-        model_filename = model
+        model_filename = attr(results$multiverse, "model_file")
         , eqn_filename = "tmp_eqn_HMMTree.eqn"
-        , data = data
-        , id = id
-        , condition = condition
+        , data = attr(results$multiverse, "data")
+        , id = attr(results$multiverse, "id")
+        , condition = attr(results$multiverse, "condition")
       ))
       file.remove("tmp_eqn_HMMTree.eqn")
 
       if(test==0) {
 
         if(running_on_windows) {
-          res[["hmmtreer"]] <- fit_lc(
-            dataset = dataset
-            , data = data
-            , model = model
-            , id = id
-            , condition = condition
+          results[["latent_class"]] <- try(
+            fit_lc(
+              dataset = dataset
+              , data = attr(results$multiverse, "data")
+              , model = attr(results$multiverse, "model_file")
+              , id = attr(results$multiverse, "id")
+              , condition = attr(results$multiverse, "condition")
+              , core = attr(results$multiverse, "core")
+            )
           )
         } else {
           message("Latent-class multinomial models can currently only be estimated on Windows -- sorry.")
@@ -316,7 +342,7 @@ fit_mpt <- function(
     }
   }
 
-  y <- dplyr::bind_rows(res)
-  class(y) <- c("multiverseMPT", class(y))
+  y <- dplyr::bind_rows(results)
+  attributes(y) <- attributes(results$multiverse)
   y
 }

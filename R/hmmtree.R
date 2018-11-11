@@ -22,6 +22,7 @@ fit_lc <- function(
   , model
   , id = NULL
   , condition = NULL
+  , core = NULL
 ) {
   
   OPTIONS <- getOption("MPTmultiverse")
@@ -46,6 +47,7 @@ fit_lc <- function(
     , data = prepared$data
     , id = id
     , condition = condition
+    , core = core
   )
   
   # Currently, no individual parameter estimates (and model fits) are calculated.

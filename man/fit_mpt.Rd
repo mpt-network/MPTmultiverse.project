@@ -141,6 +141,11 @@ This functions is a fancy wrapper for packages \pkg{MPTinR} and
       \item{\code{"pb_no"}: }{Parametric bootstrap, no pooling}
       \item{\code{"npb_no"}: }{Nonparametric bootstrap, no pooling}
     }
+    
+    Maximum-likelihood estimation with \pkg{HMMTreeR}
+    \itemize{
+      \item{\code{"latent_class"}: } { Asymptotic ML theory, partial pooling, latent-class approach}
+    }
      
     Bayesian estimation with \pkg{TreeBUGS}
     \itemize{
@@ -205,6 +210,24 @@ This functions is a fancy wrapper for packages \pkg{MPTinR} and
     mean of the identifiable individual-level estimates. And difference
     between conditions is calculated in the same manner as for the asymptotic
     case using the identifiable individual-level parameter esatimates.
+    
+  }
+  
+  \subsection{Latent-class approach}{
+    The \emph{latent-class approach} is fitted by interfacing \code{HMMTree},
+    a software package that is only available on Microsoft Windows Machines.
+    To install this software and the necessary \code{R} interface, use
+    \code{devtools::install_github("methexp/HMMTreeR")}.
+    It is currently not possible to estimate models that contain parameters
+    that are fixed to numerical values.
+    Multiple latent-class models with differing number of latent classes are
+    estimated. The model that obtains the lowest \emph{AIC} while still being
+    identified is selected for extracting parameter estimates
+    The returned group-level parameter estimates are calculated as the
+    weighted mean of parameter estimates of latent classes. Corresponding SEs
+    are given by the square root of the weighted mean of class-wise squared
+    SEs. Goodness-of-fit statistics are M1, M2, S1, and S2 as described by
+    Klauer(2006).
   }
 
   \subsection{Bayesian Methods}{
@@ -358,4 +381,8 @@ glimpse(bayes_complete)
 Smith, J. B., & Batchelder, W. H. (2008). Assessing individual differences
   in categorical data. \emph{Psychonomic Bulletin & Review}, 15(4), 713-731.
   \url{https://doi.org/10.3758/PBR.15.4.713}
+  
+  Klauer, K.C. (2006). Hierarchical multinomial processing tree models: A
+  latent-class approach. \emph{Psychometrika}, \emph{71} (1), 7-31.
+  \url{https://doi.org/10.1007/s11336-004-1188-3}
 }
