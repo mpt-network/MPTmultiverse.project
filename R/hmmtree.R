@@ -151,6 +151,7 @@ fit_lc <- function(
     est_group[[j]] <- tibble::tibble(
       condition = j
       , parameter = estimates$parameter
+      , core = estimates$parameter %in% prepared$parameters
       , est = estimates$estimate
       , se = (estimates$upper - estimates$estimate) / qnorm(p = .975)
     )
