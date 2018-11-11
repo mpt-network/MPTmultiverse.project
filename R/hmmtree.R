@@ -10,6 +10,7 @@
 #' @param condition Character. Name of the column specifying a between-subjects factor.
 #'   If not specified, no between-subjects comparisons are performed.
 #' 
+#' @importFrom tibble tibble
 #' @importFrom stats pchisq qnorm
 #' @importFrom utils write.table
 #' @keywords internal
@@ -29,21 +30,20 @@ fit_lc <- function(
   MAX_CI_INDIV <- OPTIONS$max_ci_indiv
   
 
-  prepared <- prep_data_fitting(
+  prepared <- MPTmultiverse:::prep_data_fitting(
     data = data
     , model_file = model
     , id = id
     , condition = condition
   )
   
-  results_row <- make_results_row(
+  results_row <- MPTmultiverse:::make_results_row(
     model = model
     , dataset = dataset
     , pooling = "partial"
     , package = "HMMTreeR"
     , method = "latent_class"
     , data = prepared$data
-    , parameters = prepared$parameters
     , id = id
     , condition = condition
   )
@@ -129,9 +129,9 @@ fit_lc <- function(
       model = model_file
       , data = data_file
       , nsubj = nrow(prepared$freq_list[[j]])
-      , max_classes = getOption("MPTmultiverse")$hmmtree$max_classes
-      , runs = getOption("MPTmultiverse")$hmmtree$n.optim
-      , fisher_information = getOption("MPTmultiverse")$hmmtree$fisher_information
+      , max_classes = 15
+      , runs = 10
+      , fisher_information = "expected"
     )
 
     estimation_time[[j]] <- as.numeric(Sys.time() - t0)
@@ -221,7 +221,7 @@ fit_lc <- function(
   
   results_row$estimation[[1]] <- tibble::tibble(
     condition = c("complete_data", names(estimation_time))
-    , time_difference = c(t1, unname(estimation_time))
+    , time_difference = as.difftime(c(t1, unname(estimation_time)))
   )
   
   # return ----
