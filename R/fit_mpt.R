@@ -286,8 +286,7 @@ fit_mpt <- function(
     method <- available_methods
   }
 
-  results <- list()
-  results[["multiverse"]] <- MPTmultiverse::fit_mpt(
+  results <- MPTmultiverse::fit_mpt(
     model = model
     , dataset = dataset
     , data = data
@@ -308,25 +307,25 @@ fit_mpt <- function(
       # ensure that no fixed parameter values are present
       test <- 1
       test <- tryCatch(simplify_eqn(
-        model_filename = attr(results$multiverse, "model_file")
+        model_filename = attr(results, "model_file")
         , eqn_filename = "tmp_eqn_HMMTree.eqn"
-        , data = attr(results$multiverse, "data")
-        , id = attr(results$multiverse, "id")
-        , condition = attr(results$multiverse, "condition")
+        , data = attr(results, "data")
+        , id = attr(results, "id")
+        , condition = attr(results, "condition")
       ))
       file.remove("tmp_eqn_HMMTree.eqn")
 
       if(test==0) {
 
         if(running_on_windows) {
-          results[["latent_class"]] <- try(
-            fit_lc(
+          results_lc <- try(
+            hmpt:::fit_lc(
               dataset = dataset
-              , data = attr(results$multiverse, "data")
-              , model = attr(results$multiverse, "model_file")
-              , id = attr(results$multiverse, "id")
-              , condition = attr(results$multiverse, "condition")
-              , core = attr(results$multiverse, "core")
+              , data = attr(results, "data")
+              , model = attr(results, "model_file")
+              , id = attr(results, "id")
+              , condition = attr(results, "condition")
+              , core = attr(results, "core")
             )
           )
         } else {
@@ -342,7 +341,24 @@ fit_mpt <- function(
     }
   }
 
-  y <- dplyr::bind_rows(results)
-  attributes(y) <- attributes(results$multiverse)
+  if(tibble::is_tibble(results_lc)) {
+    res <- list(
+      multiverse = results
+      , lc = results_lc
+    )
+    y <- dplyr::bind_rows(res)
+    class(y) <- class(results)
+    attr(y, "call") <- attr(results, "call")
+    attr(y, "model_file") <- attr(results, "model_file")
+    attr(y, "data_file") <- attr(results, "data_file")
+    attr(y, "model") <- attr(results, "model")
+    attr(y, "data") <- attr(results, "data")
+    attr(y, "id") <- attr(results, "id")
+    attr(y, "condition") <- attr(results, "condition")
+    attr(y, "core") <- attr(results, "core")
+  } else {
+    y <- results
+  }
+
   y
 }

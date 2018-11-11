@@ -60,14 +60,14 @@ fit_lc <- function(
   # Aggregate analyses: Ignore between-subjects condition
   
   tmp_file_suffix <- "-HMMTreeR-tmp-file"
-  model_file <- paste0(model, tmp_file_suffix)
+  model_file <- file.path(getwd(), paste0(basename(model), tmp_file_suffix))
 
   # ensure the eqn file corresponds to the rather restrictive definition of HMMTree
-  simplify_eqn(model_filename = model, eqn_filename = model_file, data = data, id = id, condition = condition)
+  hmpt:::simplify_eqn(model_filename = model, eqn_filename = model_file, data = data, id = id, condition = condition)
   
   # write data of condition group to tab-separated file
-  data_file <- paste0(dataset, tmp_file_suffix)
-  id_col <- data.frame(id = rep(dataset, nrow(data)), stringsAsFactors = FALSE)
+  data_file <- paste0(file.path(getwd(), basename(dataset)), tmp_file_suffix)
+  id_col <- data.frame(id = rep(basename(dataset), nrow(data)), stringsAsFactors = FALSE)
   write.table(file = data_file, x = cbind(id_col, data[, setdiff(colnames(data), c(id, condition))]), sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 
 
@@ -76,25 +76,25 @@ fit_lc <- function(
     model = model_file
     , data = data_file
     , nsubj = nrow(data)
-    , max_classes = getOption("MPTmultiverse")$hmmtree$max_classes
-    , runs = getOption("MPTmultiverse")$hmmtree$n.optim
-    , fisher_information = getOption("MPTmultiverse")$hmmtree$fisher_information
+    , max_classes = 15
+    , runs = OPTIONS$mptinr$n.optim
+    , fisher_information = "expected"
   )
   t1 <- as.numeric(Sys.time() - t0)
 
   # remove temporary files
   file.remove(model_file, data_file)
-  
-  
+
+
   # extract failcodes of all models, so that only models with estimable CIs
   # are included in the output object
   failcodes <- lapply(X = res, FUN = function(x){x$description$failcode})
   res <- res[failcodes==0]
-  
+
   fit_stats <- HMMTreeR::fit_statistics(res[[length(res)]]) # choose winning model
-  
+
   required_stats <- c("M1", "M2", "S1", "S2")
-  
+
   gof <- tibble::tibble(
     type = required_stats
     , focus = rep(c("mean", "cov"), each = 2)
@@ -102,9 +102,9 @@ fit_lc <- function(
     , stat_pred = NA_real_
     , stat_df = as.numeric(fit_stats[, paste0("df_", required_stats)])
   )
-  gof$p <- ifelse(gof$stat_df <= 0, NA_real_, stats::pchisq(q = gof$stat_obs, df = gof$stat_df))
-  
-  
+  gof$p <- ifelse(gof$stat_df <= 0, NA_real_, stats::pchisq(q = gof$stat_obs, df = gof$stat_df, lower.tail = FALSE))
+
+
   results_row$gof[[1]] <- gof
   
   
@@ -132,7 +132,7 @@ fit_lc <- function(
       , data = data_file
       , nsubj = nrow(prepared$freq_list[[j]])
       , max_classes = 15
-      , runs = 10
+      , runs = OPTIONS$mptinr$n.optim
       , fisher_information = "expected"
     )
 
@@ -150,8 +150,8 @@ fit_lc <- function(
     
     est_group[[j]] <- tibble::tibble(
       condition = j
-      , parameter = estimates$parameter
-      , core = estimates$parameter %in% prepared$parameters
+      , parameter = as.character(estimates$parameter)
+      , core = as.character(estimates$parameter) %in% prepared$parameters
       , est = estimates$estimate
       , se = (estimates$upper - estimates$estimate) / qnorm(p = .975)
     )
@@ -184,7 +184,7 @@ fit_lc <- function(
     gof_group[[j]]$p = ifelse(
       gof_group[[j]]$stat_df <= 0
       , NA_real_
-      , pchisq(q = gof_group[[j]]$stat_obs, df = gof_group[[j]]$stat_df)
+      , pchisq(q = gof_group[[j]]$stat_obs, df = gof_group[[j]]$stat_df, lower.tail = FALSE)
     )
   }
   
@@ -212,6 +212,7 @@ fit_lc <- function(
       (est_group[est_group$condition == c1 & est_group$parameter == p, ]$se)^2 +
       (est_group[est_group$condition == c2 & est_group$parameter == p, ]$se)^2
     )
+    
   }
   
   for (k in OPTIONS$ci_size) {
@@ -224,7 +225,7 @@ fit_lc <- function(
   
   results_row$estimation[[1]] <- tibble::tibble(
     condition = c("complete_data", names(estimation_time))
-    , time_difference = as.difftime(c(t1, unname(estimation_time)))
+    , time_difference = as.difftime(c(t1, unname(estimation_time)), units = "secs")
   )
   
   # return ----

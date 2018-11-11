@@ -40,7 +40,9 @@ For the frequentist approaches, no pooling (with and without parametric or nonpa
 First of all, make sure that you have installed the *latest* version of `R`, of all necessary `R` packages, *and* of `JAGS`. To install `JAGS`, go to [mcmc-jags.sourceforge.net](http://mcmc-jags.sourceforge.net/) and follow installation instructions. After that, install or update the required `R` packages:
 
 ```{r update-packages, eval = FALSE}
-install.packages("MPTmultiverse")
+install.packages("devtools")
+devtools::install_github("mpt-network/hmpt")
+devtools::install_github("methexp/HMMTreeR")
 update.packages(ask = FALSE)
 ```
 
@@ -107,7 +109,7 @@ head(data)
 
 ## Options
 
-Every time the package `MPTmultiverse` is loaded, it automatically sets some more
+Every time the package is loaded, it automatically sets some more
 or less useful defaults for model estimation, usage of multiple processor cores,
 number of posterior predictive samples, etc.
 By calling `mpt_options()` without any parameters, you can inspect these default values.
@@ -168,7 +170,7 @@ save(results, file = "../inst/extdata/results_bayen_kuhlmann.RData")
 ```
 
 ```{r echo = FALSE}
-load(file = system.file("extdata", "results_bayen_kuhlmann.RData", package = "MPTmultiverse"))
+load(file = system.file("extdata", "results_bayen_kuhlmann.RData", package = "hmpt"))
 ```
 
 ```{r}
@@ -181,7 +183,7 @@ For the Bayesian approaches, the `betacpp` did not reach an effective sample siz
 
 ## Returned Object
 
-`fit_mpt` returns a `tibble` with an additional class, `multiverseMPT`, with one row per estimation method. When using the default setting and if all methods succeed, `fit_mpt` uses ten estimation methods and thus this `tibble` contains ten rows. The first five columns contain information about data and method and the remaining columns contain the results. Most of the results columns are `list` columns and inspection of the content is performed most conveniently using packages `dplyr` and `tidyr`. We therefore load these packages before taking a glimpse at the columns. 
+`fit_mpt` returns a `tibble` with an additional class, `multiverseMPT`, with one row per estimation method. When using the default setting and if all methods succeed, `fit_mpt` uses eleven estimation methods and thus this `tibble` contains eleven rows. The first five columns contain information about data and method and the remaining columns contain the results. Most of the results columns are `list` columns and inspection of the content is performed most conveniently using packages `dplyr` and `tidyr`. We therefore load these packages before taking a glimpse at the columns. 
 
 ```{r}
 library("dplyr")
@@ -189,7 +191,7 @@ library("tidyr")
 glimpse(results)
 ```
 
-Bayen and Kuhlman (2011) report a difference in the $g$ parameter across conditions (they actually report an interaction with a further within-subjects factor, but this is not considered here). Thus, we can take a look at the difference in $g$ parameter across conditions and methods in the following manner: We first select the column containing the results of the between-condition tests, `unnest` this column, and then select only data containing the relevant parameter.
+Bayen and Kuhlmann (2011) report a difference in the $g$ parameter across conditions (they actually report an interaction with a further within-subjects factor, but this is not considered here). Thus, we can take a look at the difference in $g$ parameter across conditions and methods in the following manner: We first select the column containing the results of the between-condition tests, `unnest` this column, and then select only data containing the relevant parameter.
 
 ```{r}
 results %>% 
@@ -204,7 +206,7 @@ Inspecting the differences across the analysis multiverse shows that the estimat
 ## Plotting Results
 
 The analysis output `results` is an object of class `multiverseMPT`, that has its own `plot()` method. The `plot` method returns `ggplot2` objects, which allows further customization (such as using `themes`).
-Type `?plot.multiverseMPT` to see the documentation of possible arguments to this method.
+Type `?MPTmultiverse::plot.multiverseMPT` to see the documentation of possible arguments to this method.
 
 To plot group-level parameter estimates use:
 
