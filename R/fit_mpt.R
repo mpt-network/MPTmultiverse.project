@@ -307,16 +307,17 @@ fit_mpt <- function(
 
       # ensure that no fixed parameter values are present
       test <- 1
-      test <- tryCatch(simplify_eqn(
+      test <- try(simplify_eqn(
         model_filename = attr(results, "model_file")
         , eqn_filename = "tmp_eqn_HMMTree.eqn"
         , data = attr(results, "data")
         , id = attr(results, "id")
         , condition = attr(results, "condition")
-      ))
-      file.remove("tmp_eqn_HMMTree.eqn")
+      ), silent = TRUE)
+      
 
       if(test==0) {
+        file.remove("tmp_eqn_HMMTree.eqn")
 
         if(running_on_windows) {
           results_lc <- try(

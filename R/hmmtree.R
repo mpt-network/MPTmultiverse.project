@@ -238,6 +238,7 @@ fit_lc <- function(
 
 simplify_eqn <- function(model_filename, eqn_filename, data = data, id, condition) {
   read_lines <- readLines(model_filename, warn = FALSE)
+  read_lines <- read_lines[read_lines!=""]
   n_terms <- as.integer(read_lines[[1]])
   if(n_terms!=(length(read_lines)-1)) stop("eqn file seems to be corrupted")
   repeat{
@@ -256,15 +257,7 @@ simplify_eqn <- function(model_filename, eqn_filename, data = data, id, conditio
     , term = unlist(lapply(X = read_lines, FUN = function(x){x[3]}))
     , stringsAsFactors = FALSE
   )
-  cat_cols <- setdiff(colnames(data), c(id, condition))
-  cat_id <- seq_along(cat_cols)
-  names(cat_id) <- cat_cols
-  
-  for(i in 1:length(unique(model$tree))) {
-    model$tree[model$tree==unique(model$tree)[i]] <- i
-  }
 
-  model$cat <- cat_id[model$cat]
   # print(model)
   # check if fixed parameter values are present in the model definition
   splitted_terms <- strsplit(model$term, split = "*", fixed = TRUE)
@@ -274,8 +267,18 @@ simplify_eqn <- function(model_filename, eqn_filename, data = data, id, conditio
   try_conversion <- suppressWarnings(as.numeric(splitted_stripped))
   
   if(!all(is.na(try_conversion))) {
-    stop("There seem to be fixed parameter values in your .eqn file. Conversion to a legacy .eqn file is thus not possible.")
+    stop(1)
   }
+  
+  cat_cols <- setdiff(colnames(data), c(id, condition))
+  cat_id <- seq_along(cat_cols)
+  names(cat_id) <- cat_cols
+  
+  for(i in 1:length(unique(model$tree))) {
+    model$tree[model$tree==unique(model$tree)[i]] <- i
+  }
+  
+  model$cat <- cat_id[model$cat]
   
   writeLines(
     text = paste(c(n_terms, paste(model$tree, model$cat, model$term, sep = " ")), collapse = "\n")
