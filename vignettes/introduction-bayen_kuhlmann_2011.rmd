@@ -217,7 +217,7 @@ plot(results, save = FALSE, "est")
 To plot between-subjects comparisons across all parameters:
 
 ```{r}
-plot(results, save = FALSE, "test_between")
+plot(results, save = FALSE, "test_between", shapes = 1:11)
 ```
 
 To plot overall goodness-of-fit use:
