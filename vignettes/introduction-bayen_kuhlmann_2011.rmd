@@ -134,7 +134,7 @@ In the next call, the main computations are performed. In the default settings, 
 
 ```{r echo = FALSE}
 set.seed(42)
-mpt_options("test")
+mpt_options("default")
 ```
 
 ```{r analysis, results = 'hide', eval = FALSE}
