@@ -296,6 +296,7 @@ fit_mpt <- function(
     , method = union("asymptotic_complete", setdiff(method, "latent_class"))
   )
 
+  results_lc <- list()
   # HMMTreeR part ----
   if("latent_class" %in% method) {
 
