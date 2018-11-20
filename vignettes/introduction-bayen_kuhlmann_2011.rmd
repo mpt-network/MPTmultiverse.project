@@ -33,7 +33,7 @@ knitr::opts_chunk$set(
 - First, it performs analyses within a *Bayesian* or a *frequentist/maximum-likelihood* statistical framework. 
 - Second, it performs analyses across different levels of *pooling*, that is, different levels of data aggregation. Overall, three different levels of pooling are explored: complete pooling (i.e., data completely aggregated across participants), no pooling (i.e., separate models are fitted to the individual-level data and the results are combined after fitting), and partial pooling (i.e., hierarchical models that combine group-level parameters with individual-level parameters as random-effects). 
 
-For the frequentist approaches, no pooling (with and without parametric or nonparametric bootstrap) and complete pooling are implemented using [`MPTinR`](https://cran.r-project.org/package=MPTinR) (Singmann & Kellen, 2013). For the Bayesian approaches, no pooling, complete pooling, and three different variants of partial pooling are implemented using [`TreeBUGS`](https://cran.r-project.org/package=TreeBUGS) (Heck, Arnold, & Arnold, 2017).
+For the frequentist approaches, no pooling (with and without parametric or nonparametric bootstrap) and complete pooling are implemented using [`MPTinR`](https://cran.r-project.org/package=MPTinR) (Singmann & Kellen, 2013). Partial pooling (i.e., latent class) is implemented by interfacing HMMTree (Stahl & Klauer, 2007). For the Bayesian approaches, no pooling, complete pooling, and three different variants of partial pooling are implemented using [`TreeBUGS`](https://cran.r-project.org/package=TreeBUGS) (Heck, Arnold, & Arnold, 2017).
 
 # Prerequisites
 
@@ -134,7 +134,7 @@ In the next call, the main computations are performed. In the default settings, 
 
 ```{r echo = FALSE}
 set.seed(42)
-mpt_options("default")
+# mpt_options("default")
 ```
 
 ```{r analysis, results = 'hide', eval = FALSE}
@@ -238,6 +238,7 @@ plot(results, save = FALSE, "gof2")
 - Bayen, U. J., Murnane, K., & Erdfelder, E. (1996). Source discrimination, item detection, and multinomial models of source monitoring. *Journal of Experimental Psychology: Learning, Memory, and Cognition*, 22(1), 197–215. https://doi.org/10.1037/0278-7393.22.1.197
 - Heck, D. W., Arnold, N. R., & Arnold, D. (2017). TreeBUGS: An R package for hierarchical multinomial-processing-tree modeling. *Behavior Research Methods*, 1–21. https://doi.org/10.3758/s13428-017-0869-7
 - Singmann, H., & Kellen, D. (2013). MPTinR: Analysis of multinomial processing tree models in R. *Behavior Research Methods*, 45(2), 560–575. https://doi.org/10.3758/s13428-012-0259-0
+- Stahl, C., & Klauer, K.C. (2007). HMMTree: A computer program for hierarchical multinomial processing tree models. Behavior Research Methods, 39, 267-273. https://doi.org/10.3758/BF03193157
 - Steegen, S., Tuerlinckx, F., Gelman, A., & Vanpaemel, W. (2016). Increasing Transparency Through a Multiverse Analysis. *Perspectives on Psychological Science*, 11(5), 702–712. https://doi.org/10.1177/1745691616658637
 
 
