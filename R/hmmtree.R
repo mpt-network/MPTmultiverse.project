@@ -76,7 +76,7 @@ fit_lc <- function(
     model = model_file
     , data = data_file
     , nsubj = nrow(data)
-    , max_classes = 15
+    , max_classes = 20
     , runs = OPTIONS$mptinr$n.optim
     , fisher_information = "expected"
   )
@@ -131,7 +131,7 @@ fit_lc <- function(
       model = model_file
       , data = data_file
       , nsubj = nrow(prepared$freq_list[[j]])
-      , max_classes = 15
+      , max_classes = 20
       , runs = OPTIONS$mptinr$n.optim
       , fisher_information = "expected"
     )
