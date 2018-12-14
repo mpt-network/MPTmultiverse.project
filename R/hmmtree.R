@@ -77,7 +77,7 @@ fit_lc <- function(
     , data = data_file
     , nsubj = nrow(data)
     , max_classes = 20
-    , runs = OPTIONS$mptinr$n.optim
+    , runs = max(5, OPTIONS$mptinr$n.optim)
     , fisher_information = "expected"
   )
   t1 <- as.numeric(Sys.time() - t0)
@@ -239,8 +239,15 @@ fit_lc <- function(
 simplify_eqn <- function(model_filename, eqn_filename, data = data, id, condition) {
   read_lines <- readLines(model_filename, warn = FALSE)
   read_lines <- read_lines[read_lines!=""]
-  n_terms <- as.integer(read_lines[[1]])
-  if(n_terms!=(length(read_lines)-1)) stop("eqn file seems to be corrupted")
+
+  #  Handling of first row
+  # Some .eqn files contain number of branches, others don't
+  n_terms <- suppressWarnings(as.integer(read_lines[[1]]))
+  if(!is.na(n_terms)) {
+    read_lines <- read_lines[-1]
+  }
+  n_terms <- length(read_lines)
+  
   repeat{
     read_lines <- gsub(read_lines, pattern = "  |\t", replacement = " ")
     if(!any(grepl(read_lines, pattern = "  |\t"))) {
