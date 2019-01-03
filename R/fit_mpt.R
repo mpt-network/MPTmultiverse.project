@@ -301,42 +301,23 @@ fit_mpt <- function(
   if("latent_class" %in% method) {
 
     # HMMTreeR installed?
-    if(suppressWarnings(requireNamespace("HMMTreeR"))) {
+    if(suppressWarnings(requireNamespace("HMMTreeR", quietly = TRUE))) {
 
-    running_on_windows <- Sys.info()[["sysname"]]=="Windows"
+      running_on_windows <- Sys.info()[["sysname"]]=="Windows"
 
-      # ensure that no fixed parameter values are present
-      test <- 1
-      test <- try(simplify_eqn(
-        model_filename = attr(results, "model_file")
-        , eqn_filename = "tmp_eqn_HMMTree.eqn"
-        , data = attr(results, "data")
-        , id = attr(results, "id")
-        , condition = attr(results, "condition")
-      ), silent = TRUE)
-      
-
-      if(test==0) {
-        file.remove("tmp_eqn_HMMTree.eqn")
-
-        if(running_on_windows) {
-          results_lc <- try(
-            hmpt:::fit_lc(
-              dataset = dataset
-              , data = attr(results, "data")
-              , model = attr(results, "model_file")
-              , id = attr(results, "id")
-              , condition = attr(results, "condition")
-              , core = attr(results, "core")
-            )
+      if(running_on_windows) {
+        results_lc <- try(
+          hmpt:::fit_lc(
+            dataset = dataset
+            , data = attr(results, "data")
+            , model = attr(results, "model_file")
+            , id = attr(results, "id")
+            , condition = attr(results, "condition")
+            , core = attr(results, "core")
           )
-        } else {
-          message("Latent-class multinomial models can currently only be estimated on Windows -- sorry.")
-        }
+        )
       } else {
-        message("The specified .eqn file seems to contain fixed parameter values:
-                The current implementation of latent-class models does not support this type of .eqn files.
-                Therefore, latant-class models are not estimated.")
+        message("Latent-class multinomial models can currently only be estimated on Windows -- sorry.")
       }
     } else {
       message("HMMTreeR is not installed on your system. Therefore, latent-class analyses are skipped.")

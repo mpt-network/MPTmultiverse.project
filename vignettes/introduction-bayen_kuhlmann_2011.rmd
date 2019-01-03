@@ -134,7 +134,7 @@ In the next call, the main computations are performed. In the default settings, 
 
 ```{r echo = FALSE}
 set.seed(42)
-# mpt_options("default")
+mpt_options("default")
 ```
 
 ```{r analysis, results = 'hide', eval = FALSE}
@@ -147,6 +147,35 @@ results <- fit_mpt(
   , core = c("D", "d")
 )
 ```
+
+
+```{r eval = FALSE, echo = FALSE}
+data <- read.csv("MH2001.csv")
+
+results2 <- fit_mpt(
+  model = "2HTSM_Sub4_2WSCond.eqn"
+  , dataset = "MH2001.csv"
+  , data = data
+  , id = COL_ID
+  , condition = COL_CONDITION
+  , core = c("D", "d", "D2", "d2")
+)
+```
+
+
+```{r eval = FALSE, echo = FALSE}
+data_file <- "pd.dat"
+data <- read.delim(data_file)
+colnames(data) <- c("id", 1:4)
+results3 <- fit_mpt(
+  model = "pd.eqn"
+  , dataset = data_file
+  , data = data
+  , core = c("c", "u")
+)
+```
+
+
 
 After fitting it is a good idea to save the results as a binary `R` data file for later. This is easiest done using `save()`. 
 
@@ -217,7 +246,7 @@ plot(results, save = FALSE, "est")
 To plot between-subjects comparisons across all parameters:
 
 ```{r}
-plot(results, save = FALSE, "test_between", shapes = 1:11)
+plot(results, save = FALSE, "test_between")
 ```
 
 To plot overall goodness-of-fit use:
@@ -238,7 +267,7 @@ plot(results, save = FALSE, "gof2")
 - Bayen, U. J., Murnane, K., & Erdfelder, E. (1996). Source discrimination, item detection, and multinomial models of source monitoring. *Journal of Experimental Psychology: Learning, Memory, and Cognition*, 22(1), 197–215. https://doi.org/10.1037/0278-7393.22.1.197
 - Heck, D. W., Arnold, N. R., & Arnold, D. (2017). TreeBUGS: An R package for hierarchical multinomial-processing-tree modeling. *Behavior Research Methods*, 1–21. https://doi.org/10.3758/s13428-017-0869-7
 - Singmann, H., & Kellen, D. (2013). MPTinR: Analysis of multinomial processing tree models in R. *Behavior Research Methods*, 45(2), 560–575. https://doi.org/10.3758/s13428-012-0259-0
-- Stahl, C., & Klauer, K.C. (2007). HMMTree: A computer program for hierarchical multinomial processing tree models. Behavior Research Methods, 39, 267-273. https://doi.org/10.3758/BF03193157
+- Stahl, C., & Klauer, K.C. (2007). HMMTree: A computer program for hierarchical multinomial processing tree models. *Behavior Research Methods*, 39, 267-273. https://doi.org/10.3758/BF03193157
 - Steegen, S., Tuerlinckx, F., Gelman, A., & Vanpaemel, W. (2016). Increasing Transparency Through a Multiverse Analysis. *Perspectives on Psychological Science*, 11(5), 702–712. https://doi.org/10.1177/1745691616658637
 
 

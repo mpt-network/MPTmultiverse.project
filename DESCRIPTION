@@ -27,7 +27,7 @@ Depends:
     R (>= 2.11.1),
 Imports:
     MPTmultiverse,
-    HMMTreeR,
+    HMMTreeR (>= 0.1.1),
     tibble,
     dplyr,
     knitr,

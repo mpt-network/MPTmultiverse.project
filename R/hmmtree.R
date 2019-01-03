@@ -23,6 +23,7 @@ fit_lc <- function(
   , id = NULL
   , condition = NULL
   , core = NULL
+  , verbose = TRUE
 ) {
   
   OPTIONS <- getOption("MPTmultiverse")
@@ -56,40 +57,50 @@ fit_lc <- function(
   results_row$gof_indiv <- list(tibble::tibble())
   
   
+  # Check if .eqn file is convertible
+  test <- try(
+    HMMTreeR:::simplify_eqn(model_filename = model, eqn_filename = NULL)
+    , silent = TRUE
+  )
+  
+  if(class(test)=="try-error") {
+    stop("The specified .eqn file seems to contain fixed parameter values:
+          The current implementation of latent-class models does not support this type of .eqn file.
+          Therefore, latant-class models are not estimated.")
+  }
+  
+  
+  
   # ----------------------------------------------------------------------------
   # Aggregate analyses: Ignore between-subjects condition
   
-  tmp_file_suffix <- "-HMMTreeR-tmp-file"
-  model_file <- file.path(getwd(), paste0(basename(model), tmp_file_suffix))
-
-  # ensure the eqn file corresponds to the rather restrictive definition of HMMTree
-  hmpt:::simplify_eqn(model_filename = model, eqn_filename = model_file, data = data, id = id, condition = condition)
   
   # write data of condition group to tab-separated file
-  data_file <- paste0(file.path(getwd(), basename(dataset)), tmp_file_suffix)
+  data_file <- paste0("HMMTreeR-tmpfile-", gsub(basename(dataset), pattern = ".csv|.txt", replacement = ".dat"))
   id_col <- data.frame(id = rep(basename(dataset), nrow(data)), stringsAsFactors = FALSE)
-  write.table(file = data_file, x = cbind(id_col, data[, setdiff(colnames(data), c(id, condition))]), sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
+  utils::write.table(file = data_file, x = cbind(id_col, data[, setdiff(colnames(data), c(id, condition))]), sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 
 
   t0 <- Sys.time()
   res <- HMMTreeR::lc(
-    model = model_file
+    model = model
     , data = data_file
-    , nsubj = nrow(data)
     , max_classes = 20
-    , runs = max(5, OPTIONS$mptinr$n.optim)
-    , fisher_information = "expected"
+    , runs = max(30, OPTIONS$mptinr$n.optim, na.rm = TRUE)
+    , fisher_information = "observed"
+    , verbose = verbose
   )
   t1 <- as.numeric(Sys.time() - t0)
-
-  # remove temporary files
-  file.remove(model_file, data_file)
-
 
   # extract failcodes of all models, so that only models with estimable CIs
   # are included in the output object
   failcodes <- lapply(X = res, FUN = function(x){x$description$failcode})
   res <- res[failcodes==0]
+  
+  
+  # Extract global properties
+  n_classes <- list()
+  n_classes[["complete_data"]] <- res[[length(res)]]$description$n_classes
 
   fit_stats <- HMMTreeR::fit_statistics(res[[length(res)]]) # choose winning model
 
@@ -118,32 +129,32 @@ fit_lc <- function(
   
   for (j in prepared$conditions) {
     
-    # ensure HMMTree compatible eqn file
-    simplify_eqn(model_filename = model, eqn_filename = model_file, data = data, id = id, condition = condition)
-    
     # write data of condition group to tab-separated file
     id_col <- data.frame(id = rep(dataset, nrow(prepared$freq_list[[j]])))
-
     utils::write.table(file = data_file, x = cbind(id_col, prepared$freq_list[[j]]), sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 
     t0 <- Sys.time()
     res <- HMMTreeR::lc(
-      model = model_file
+      model = model
       , data = data_file
-      , nsubj = nrow(prepared$freq_list[[j]])
       , max_classes = 20
-      , runs = OPTIONS$mptinr$n.optim
-      , fisher_information = "expected"
+      , runs = max(30, OPTIONS$mptinr$n.optim, na.rm = TRUE)
+      , fisher_information = "observed"
+      , verbose = verbose
     )
 
     estimation_time[[j]] <- as.numeric(Sys.time() - t0)
     
+    
     # remove temporary files
-    file.remove(model_file, data_file)
+    file.remove(data_file)
     
     # remove models where Fisher Information Matrix was not estimable.
     failcodes <- lapply(X = res, FUN = function(x){x$description$failcode})
     res <- res[failcodes==0]
+    
+    # Extract global properties
+    n_classes[[j]] <- res[[length(res)]]$description$n_classes
     
     # parameter estimates ----
     estimates <- HMMTreeR::weighted_means(res[[length(res)]])
@@ -226,71 +237,9 @@ fit_lc <- function(
   results_row$estimation[[1]] <- tibble::tibble(
     condition = c("complete_data", names(estimation_time))
     , time_difference = as.difftime(c(t1, unname(estimation_time)), units = "secs")
+    , n_classes = unname(unlist(n_classes))
   )
   
   # return ----
   results_row
-}
-
-
-
-#' @keywords internal
-
-simplify_eqn <- function(model_filename, eqn_filename, data = data, id, condition) {
-  read_lines <- readLines(model_filename, warn = FALSE)
-  read_lines <- read_lines[read_lines!=""]
-
-  #  Handling of first row
-  # Some .eqn files contain number of branches, others don't
-  n_terms <- suppressWarnings(as.integer(read_lines[[1]]))
-  if(!is.na(n_terms)) {
-    read_lines <- read_lines[-1]
-  }
-  n_terms <- length(read_lines)
-  
-  repeat{
-    read_lines <- gsub(read_lines, pattern = "  |\t", replacement = " ")
-    if(!any(grepl(read_lines, pattern = "  |\t"))) {
-      break
-    }
-  }
-  read_lines <- sub(read_lines, pattern = " ", replacement = ";")
-  read_lines <- sub(read_lines, pattern = " ", replacement = ";")
-  read_lines <- strsplit(read_lines[-1], split = ";")
-  
-  model <- data.frame(
-    tree = unlist(lapply(X = read_lines, FUN = function(x){x[1]}))
-    , cat = unlist(lapply(X = read_lines, FUN = function(x){x[2]}))
-    , term = unlist(lapply(X = read_lines, FUN = function(x){x[3]}))
-    , stringsAsFactors = FALSE
-  )
-
-  # print(model)
-  # check if fixed parameter values are present in the model definition
-  splitted_terms <- strsplit(model$term, split = "*", fixed = TRUE)
-  splitted_stripped <- lapply(X = splitted_terms, FUN = gsub, pattern = "(1-", replacement = "", fixed = TRUE)
-  splitted_stripped <- unlist(lapply(X = splitted_stripped, FUN = gsub, pattern = ")", replacement = "", fixed = TRUE))
-  
-  try_conversion <- suppressWarnings(as.numeric(splitted_stripped))
-  
-  if(!all(is.na(try_conversion))) {
-    stop(1)
-  }
-  
-  cat_cols <- setdiff(colnames(data), c(id, condition))
-  cat_id <- seq_along(cat_cols)
-  names(cat_id) <- cat_cols
-  
-  for(i in 1:length(unique(model$tree))) {
-    model$tree[model$tree==unique(model$tree)[i]] <- i
-  }
-  
-  model$cat <- cat_id[model$cat]
-  
-  writeLines(
-    text = paste(c(n_terms, paste(model$tree, model$cat, model$term, sep = " ")), collapse = "\n")
-    , con = eqn_filename
-    , sep=""
-  )
-  return(0)
 }

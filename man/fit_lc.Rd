@@ -5,7 +5,7 @@
 \title{Fit latent-class multinomial models}
 \usage{
 fit_lc(dataset, data, model, id = NULL, condition = NULL,
-  core = NULL)
+  core = NULL, verbose = TRUE)
 }
 \arguments{
 \item{dataset}{Character.}
