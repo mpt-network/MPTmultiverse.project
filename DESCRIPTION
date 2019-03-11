@@ -17,7 +17,7 @@ Description:
     For the Bayesian approaches, no pooling, complete pooling, and three different 
     variants of partial pooling are implemented using 
     TreeBUGS <https://cran.r-project.org/package=TreeBUGS>. The main function is 
-    fit_mpt() who performs the multiverse analysis in one call.
+    fit_mpt() which performs the multiverse analysis in one call.
 Authors@R: c(
     person("Marius", "Barth", email = "marius.barth@uni-koeln.de", role = c("cre", "aut"))
   )
@@ -28,10 +28,15 @@ Depends:
 Imports:
     MPTmultiverse,
     HMMTreeR (>= 0.1.1),
+    DescTools,
+    ggbeeswarm,
     tibble,
     dplyr,
     knitr,
-    tidyr
+    tidyr,
+    magrittr,
+    rlang,
+    ggplot2
 Suggests:
     TreeBUGS
 LazyData: yes
