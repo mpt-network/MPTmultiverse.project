@@ -85,11 +85,19 @@ pairs_plot <- function(x, parameter, ...) {
   if(!missing(parameter)) {
     x <- x[x$parameter == parameter, ]
   }
+  
+  format_ccc <- function(x) {
+    ifelse(
+      round(x, digits = 3) == 1
+      , "1"
+      , paste0(".", strsplit(format(x, digits = 3, nsmall = 3), split = "[.]")[[1]][2])
+    )
+  }
 
   plot_text <- x %>%
     dplyr::group_by(.data$method_x, .data$method_y) %>%
-    dplyr::summarise(ccc = format(DescTools::CCC(.data$x, .data$y, na.rm = TRUE)$rho.c$est, digits = 3))
-
+    dplyr::summarise(ccc = format_ccc(DescTools::CCC(.data$x, .data$y, na.rm = TRUE)$rho.c$est))
+  
   x %>%
     ggplot2::ggplot(ggplot2::aes(x = .data$x, y = .data$y)) +
     ggplot2::geom_abline(slope = 1, intercept = 0) +
@@ -97,10 +105,15 @@ pairs_plot <- function(x, parameter, ...) {
     ggplot2::facet_grid(method_x ~ method_y) +
     ggplot2::geom_text(
       data = plot_text
-      , ggplot2::aes(x = 0.2, y = 0.9, label = "ccc")
+      , ggplot2::aes(
+        x = 0.2
+        , y = 0.9
+        , label = plot_text$ccc
+      )
       , parse = TRUE
       , inherit.aes = FALSE
-      , size = 5) +
+      , size = 4
+    ) +
     ggplot2::coord_fixed(xlim = c(0, 1), ylim = c(0, 1)) +
     ggplot2::xlab("") +
     ggplot2::ylab("")
@@ -131,9 +144,11 @@ ccc_plot <- function(x, ...) {
 
   all_ccc %>%
     ggplot2::ggplot(ggplot2::aes(x = .data$parameter, y = .data$ccc)) +
-    ggbeeswarm::geom_beeswarm(ggplot2::aes(shape = .data$method_x, col = .data$n_estimates),
+    ggbeeswarm::geom_beeswarm(ggplot2::aes_(shape = ~ method_x, col = ~ n_estimates),
                               cex = 0.5, alpha = 0.4) +
     ggplot2::stat_summary(fun.data = ggplot2::mean_se) +
     ggplot2::scale_colour_continuous(low = "#56B1F7", high = "#132B43") +
-    ggplot2::scale_shape_manual(values=c(0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 13))
+    ggplot2::scale_shape_manual(values=c(0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 13)) + 
+    ggplot2::xlab("Parameter") + 
+    ggplot2::ylab("CCC")
 }
