@@ -31,32 +31,59 @@ compare_methods.multiverseMPT <- function(
   }
 
   results <- tidyr::unnest(results, .data[[args$which]])
-
-  results$inter <- interaction(
-    results$method
-    , results$pooling
-    , results$package
-    , drop = TRUE
-    , sep = " "
+  
+  results$approach <- factor(
+    interaction(
+      results$pooling
+      , results$method
+      , drop = TRUE
+      , sep = "_"
+    )
+    , levels = c(
+      "complete_asymptotic"
+      , "complete_simple"
+      , "no_asymptotic"
+      , "no_PB/MLE"
+      , "no_NPB/MLE"
+      , "no_simple"
+      , "partial_latent_class"
+      , "partial_trait"
+      , "partial_trait_uncorrelated"
+      , "partial_beta"
+      , "partial_betacpp"
+    )
+    , labels = c(
+      "complete (ML)"
+      , "complete (Bayes)"
+      , "no (ML)"
+      , "no (PB)"
+      , "no (nPB)"
+      , "no (Bayes)"
+      , "class"
+      , "trait"
+      , "trait (uncorr)"
+      , "beta"
+      , "beta (c++)"
+    )
   )
 
   results <- results %>%
-    dplyr::group_by(.data$model, .data$dataset, .data$inter, .data$condition, .data$parameter) %>%
+    dplyr::group_by(.data$model, .data$dataset, .data$approach, .data$condition, .data$parameter) %>%
     dplyr::mutate(within = seq_along(.data$parameter)) %>%
     dplyr::ungroup()
 
   # Calculate CCC of all pairwise combinations
-  pairs <- utils::combn(sort(levels(results$inter)), 2)
+  pairs <- utils::combn(sort(levels(results$approach)), 2)
   all_pars_list <- vector("list", ncol(pairs))
 
   for (i in seq_len(ncol(pairs))) {
     tmp_dat <- results %>%
-      dplyr::filter(.data$inter %in% pairs[, i]) %>%
-      dplyr::select(.data$model, .data$dataset, .data$condition, .data$within, .data$parameter, .data$est, .data$inter) %>%
+      dplyr::filter(.data$approach %in% pairs[, i]) %>%
+      dplyr::select(.data$model, .data$dataset, .data$condition, .data$within, .data$parameter, .data$est, .data$approach) %>%
       dplyr::group_by(.data$model, .data$dataset) %>%
       dplyr::mutate(n_conditions = length(unique(.data$condition))) %>%
       dplyr::ungroup() %>%
-      tidyr::spread(key = .data$inter, value = .data$est)
+      tidyr::spread(key = .data$approach, value = .data$est)
     colnames(tmp_dat)[(ncol(tmp_dat)-1):ncol(tmp_dat)] <- c("x", "y")
     tmp_dat$method_x <- pairs[1, i]
     tmp_dat$method_y <- pairs[2, i]
