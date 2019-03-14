@@ -138,7 +138,9 @@ pairs_plot <- function(x, parameter, ...) {
     ) +
     ggplot2::coord_fixed(xlim = c(0, 1), ylim = c(0, 1)) +
     ggplot2::xlab("") +
-    ggplot2::ylab("")
+    ggplot2::ylab("") + 
+    scale_x_continuous(breaks = c(0, 1)) + 
+    scale_y_continuous(breaks = c(0, 1))
 }
 
 #' Plot Concordance Correlation Coefficient
