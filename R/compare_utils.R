@@ -40,10 +40,10 @@ compare_methods.multiverseMPT <- function(
     , sep = " "
   )
 
-  results <- results %>%
-    dplyr::group_by(.data$model, .data$dataset, .data$inter, .data$condition, .data$parameter) %>%
-    dplyr::mutate(within = seq_along(.data$parameter)) %>%
-    dplyr::ungroup()
+  # results <- results %>%
+  #   dplyr::group_by(.data$model, .data$dataset, .data$inter, .data$condition, .data$parameter) %>%
+  #   dplyr::mutate(within = as.integer(factor(.data$parameter))) %>%
+  #   dplyr::ungroup()
 
   # Calculate CCC of all pairwise combinations
   pairs <- utils::combn(sort(levels(results$inter)), 2)
@@ -52,7 +52,7 @@ compare_methods.multiverseMPT <- function(
   for (i in seq_len(ncol(pairs))) {
     tmp_dat <- results %>%
       dplyr::filter(.data$inter %in% pairs[, i]) %>%
-      dplyr::select(.data$model, .data$dataset, .data$condition, .data$within, .data$parameter, .data$est, .data$inter) %>%
+      dplyr::select(.data$model, .data$dataset, .data$condition, .data$parameter, .data$est, .data$inter) %>%
       dplyr::group_by(.data$model, .data$dataset) %>%
       dplyr::mutate(n_conditions = length(unique(.data$condition))) %>%
       dplyr::ungroup() %>%
@@ -83,7 +83,7 @@ compare_methods.multiverseMPT <- function(
 pairs_plot <- function(x, parameter, ...) {
 
   if(!missing(parameter)) {
-    x <- x[x$parameter == parameter, ]
+    x <- x[x$parameter %in% parameter, ]
   }
   
   format_ccc <- function(x) {
