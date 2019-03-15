@@ -32,7 +32,7 @@ compare_methods.multiverseMPT <- function(
 
   results <- tidyr::unnest(results, .data[[args$which]])
   
-  results$approach <- factor(
+  results$approach <- as.character(factor(
     interaction(
       results$pooling
       , results$method
@@ -65,10 +65,10 @@ compare_methods.multiverseMPT <- function(
       , "beta"
       , "beta (c++)"
     )
-  )
+  ))
 
   # Calculate CCC of all pairwise combinations
-  pairs <- utils::combn(sort(levels(results$approach)), 2)
+  pairs <- utils::combn(sort(unique(results$approach)), 2)
   all_pars_list <- vector("list", ncol(pairs))
 
   for (i in seq_len(ncol(pairs))) {
