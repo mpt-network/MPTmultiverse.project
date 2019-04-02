@@ -76,7 +76,7 @@ fit_lc <- function(
   
   
   # write data of condition group to tab-separated file
-  data_file <- paste0("HMMTreeR-tmpfile-", gsub(basename(dataset), pattern = ".csv|.txt", replacement = ".dat"))
+  data_file <- paste0("HMMTreeR-tmpfile-", gsub(basename(dataset), pattern = ".csv|.txt|.dat", replacement = ""), ".dat")
   id_col <- data.frame(id = rep(basename(dataset), nrow(data)), stringsAsFactors = FALSE)
   utils::write.table(file = data_file, x = cbind(id_col, data[, setdiff(colnames(data), c(id, condition))]), sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 
